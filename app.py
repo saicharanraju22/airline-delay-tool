@@ -35,12 +35,23 @@ st.markdown("""
         border: none !important;
         font-weight: 500;
         width: 100%;
-        padding: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        text-align: left !important;
     }
     .stButton > button:hover {
         background-color: #333333 !important;
         color: #ffffff !important;
     }
+
+    /* active nav button */
+    .nav-active > button {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-left: 4px solid #ffffff !important;
+        font-weight: 700 !important;
+    }
+
     .stat-card {
         border: 1.5px solid #000000;
         padding: 12px 16px;
@@ -91,6 +102,30 @@ st.markdown("""
     }
     .page-title { color: #000000 !important; font-size: 26px; font-weight: 500; margin-bottom: 4px; }
     .page-sub { color: #666666; font-size: 14px; margin-bottom: 1.5rem; }
+    .historical-note {
+        font-size: 11px;
+        color: #888888;
+        margin-top: 8px;
+        font-style: italic;
+    }
+
+    /* sidebar nav buttons */
+    [data-testid="stSidebar"] .stButton > button {
+        background-color: transparent !important;
+        color: #888888 !important;
+        border: none !important;
+        border-left: 3px solid transparent !important;
+        border-radius: 0px !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background-color: rgba(255,255,255,0.08) !important;
+        color: #ffffff !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -138,7 +173,7 @@ def show_risk(prob):
     else:
         return f'<span class="risk-low">{prob:.0%} — LOW RISK ✅</span>'
 
-# build airport lookup — code to full name — from actual data
+# airport lookup from real data
 airport_lookup = (
     data[['airport', 'airport_name']]
     .dropna()
@@ -147,25 +182,36 @@ airport_lookup = (
     .to_dict()
 )
 
-# dropdown options
 airline_list      = sorted(data['carrier_name'].dropna().unique().tolist())
 airport_codes     = sorted(data['airport'].dropna().unique().tolist())
 airport_full_list = sorted([airport_lookup.get(c, c) for c in airport_codes])
 month_list        = list(month_map.values())
-
-# reverse lookup — full name to code
-name_to_code = {v: k for k, v in airport_lookup.items()}
+name_to_code      = {v: k for k, v in airport_lookup.items()}
 
 def get_code(full_name):
     return name_to_code.get(full_name, full_name)
+
+# ── SESSION STATE FOR NAVIGATION ───────────────────────────────────────────────
+if 'page' not in st.session_state:
+    st.session_state.page = 'Home'
 
 # ── SIDEBAR ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ✈️ AeroRight")
     st.markdown("<small style='color:#888;'>Right choice for your travel</small>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown("<div style='font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:8px;'>Menu</div>", unsafe_allow_html=True)
-    page = st.radio("", ["Home", "Customer Tool", "Airline Tool", "Recommendation System"], label_visibility="collapsed")
+    st.markdown("<div style='font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:4px;'>Menu</div>", unsafe_allow_html=True)
+
+    if st.button("🏠  Home"):
+        st.session_state.page = 'Home'
+    if st.button("🧳  Customer Tool"):
+        st.session_state.page = 'Customer Tool'
+    if st.button("🏢  Airline Tool"):
+        st.session_state.page = 'Airline Tool'
+    if st.button("🏆  Recommendation System"):
+        st.session_state.page = 'Recommendation System'
+
+page = st.session_state.page
 
 # ── HOME PAGE ──────────────────────────────────────────────────────────────────
 if page == "Home":
@@ -199,19 +245,21 @@ if page == "Home":
 # ── CUSTOMER TOOL ──────────────────────────────────────────────────────────────
 elif page == "Customer Tool":
     st.markdown('<div class="page-title">🧳 Customer Tool</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Check your flight\'s cancellation risk before you book</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Check your flight\'s cancellation risk — based on 10 years of historical patterns (2015–2025)</div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
         selected_airport_name = st.selectbox("Airport", airport_full_list)
         selected_airport = get_code(selected_airport_name)
     with col2:
-        airlines_at_airport = sorted(data[data["airport"] == selected_airport]["carrier_name"].dropna().unique().tolist())
+        airlines_at_airport = sorted(data[data['airport'] == selected_airport]['carrier_name'].dropna().unique().tolist())
         selected_airline = st.selectbox("Airline", airlines_at_airport)
     with col3:
         selected_month = st.selectbox("Month", month_list)
 
-    if st.button("Check Risk"):
+    st.markdown('<div class="historical-note">Results are based on historical patterns from 2015–2025 BTS data — not real-time predictions</div>', unsafe_allow_html=True)
+
+    if st.button("Check Historical Risk", key="ct_btn"):
         month_num = get_month_number(selected_month)
 
         filtered = data[
@@ -221,7 +269,7 @@ elif page == "Customer Tool":
         ].dropna(subset=features)
 
         if filtered.empty:
-            st.warning("No data found for this combination. Try a different airline or airport.")
+            st.warning("No data found for this combination.")
         else:
             cancel_risk  = model.predict_proba(filtered[features])[:, 1].mean()
             all_airlines = data[(data['airport'] == selected_airport) & (data['month'] == month_num)].dropna(subset=features).copy()
@@ -235,17 +283,19 @@ elif page == "Customer Tool":
                 <b>Airline:</b> {selected_airline}<br>
                 <b>Airport:</b> {selected_airport_name} &nbsp;|&nbsp; <b>Month:</b> {selected_month}
                 <div class="result-divider"></div>
-                <b>Your Cancellation Risk:</b> {show_risk(cancel_risk)}<br>
+                <b>Historical Cancellation Risk:</b> {show_risk(cancel_risk)}<br>
                 <b>Airport Average Risk:</b> {avg_risk:.0%}
                 <div class="result-divider"></div>
-                <b>✅ Safer Alternative:</b> {safest_airline} &nbsp;({safest_risk:.0%})
+                <b>✅ Safer Alternative:</b> {safest_airline} &nbsp;({safest_risk:.0%})<br>
+                <div class="result-divider"></div>
+                <span style="font-size:11px; color:#888;">Based on 10 years of U.S. BTS data (2015–2025)</span>
             </div>
             """, unsafe_allow_html=True)
 
 # ── AIRLINE TOOL ───────────────────────────────────────────────────────────────
 elif page == "Airline Tool":
     st.markdown('<div class="page-title">🏢 Airline Tool</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Identify your airline\'s biggest delay driver before the month begins</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Identify your airline\'s biggest delay driver — based on 10 years of historical patterns (2015–2025)</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -253,7 +303,9 @@ elif page == "Airline Tool":
     with col2:
         selected_month2 = st.selectbox("Month", month_list)
 
-    if st.button("Analyse Delays"):
+    st.markdown('<div class="historical-note">Results are based on historical patterns from 2015–2025 BTS data — not real-time predictions</div>', unsafe_allow_html=True)
+
+    if st.button("Analyse Historical Delays", key="at_btn"):
         month_num2 = get_month_number(selected_month2)
         filtered2  = data[(data['carrier_name'] == selected_airline2) & (data['month'] == month_num2)]
 
@@ -285,14 +337,15 @@ elif page == "Airline Tool":
                     {table_rows}
                 </table>
                 <div class="result-divider"></div>
-                <b>🔴 Biggest Risk Driver: {biggest_cause}</b>
+                <b>🔴 Biggest Delay Driver: {biggest_cause}</b><br>
+                <span style="font-size:11px; color:#888;">Based on 10 years of U.S. BTS data (2015–2025)</span>
             </div>
             """, unsafe_allow_html=True)
 
 # ── RECOMMENDATION SYSTEM ──────────────────────────────────────────────────────
 elif page == "Recommendation System":
     st.markdown('<div class="page-title">🏆 Recommendation System</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Find the safest airline at any airport for your travel month</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Find the safest airline at any airport — based on 10 years of historical patterns (2015–2025)</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -301,7 +354,9 @@ elif page == "Recommendation System":
     with col2:
         selected_month3 = st.selectbox("Month", month_list)
 
-    if st.button("Find Safest Airlines"):
+    st.markdown('<div class="historical-note">Results are based on historical patterns from 2015–2025 BTS data — not real-time predictions</div>', unsafe_allow_html=True)
+
+    if st.button("Find Safest Airlines", key="rs_btn"):
         month_num3 = get_month_number(selected_month3)
         filtered3  = data[(data['airport'] == selected_airport3) & (data['month'] == month_num3)].dropna(subset=features).copy()
 
@@ -329,7 +384,8 @@ elif page == "Recommendation System":
                 </table>
                 <div class="result-divider"></div>
                 <b>⚠️ Highest Risk Airline:</b><br>
-                <span style="color:#ff6b6b;">{worst_airline} — {worst_risk:.0%}</span>
+                <span style="color:#ff6b6b;">{worst_airline} — {worst_risk:.0%}</span><br>
+                <span style="font-size:11px; color:#888;">Based on 10 years of U.S. BTS data (2015–2025)</span>
             </div>
             """, unsafe_allow_html=True)
 
