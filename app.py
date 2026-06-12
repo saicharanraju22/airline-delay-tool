@@ -9,37 +9,25 @@ st.set_page_config(
     layout="wide"
 )
 
-# styling - black and white classic theme
+# styling
 st.markdown("""
 <style>
-    /* hide default streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* page background */
     .stApp { background-color: #ffffff; }
     [data-testid="stSidebar"] { background-color: #000000; }
-    [data-testid="stSidebar"] * { color: #ffffff; }
+    [data-testid="stSidebar"] * { color: #ffffff !important; }
 
-    /* sidebar navigation */
-    [data-testid="stSidebar"] .stRadio label {
-        color: #888888 !important;
-        font-size: 14px;
-    }
-    [data-testid="stSidebar"] .stRadio [aria-checked="true"] + div {
-        color: #ffffff !important;
-    }
+    h1, h2, h3 { color: #000000 !important; }
 
-    /* all input boxes - sharp */
     .stSelectbox > div > div {
         border-radius: 0px !important;
         border: 1.5px solid #000000 !important;
         background-color: #ffffff !important;
         color: #000000 !important;
     }
-
-    /* all buttons - sharp black */
     .stButton > button {
         border-radius: 0px !important;
         background-color: #000000 !important;
@@ -53,8 +41,6 @@ st.markdown("""
         background-color: #333333 !important;
         color: #ffffff !important;
     }
-
-    /* stat cards and finding cards */
     .stat-card {
         border: 1.5px solid #000000;
         padding: 12px 16px;
@@ -62,18 +48,14 @@ st.markdown("""
     }
     .stat-label { font-size: 11px; color: #666666; margin-bottom: 4px; }
     .stat-value { font-size: 22px; font-weight: 500; color: #000000; }
-
     .finding-card {
         border: 1.5px solid #000000;
         padding: 12px 16px;
         background: #ffffff;
-        height: 100%;
     }
     .finding-title { font-size: 11px; color: #666666; margin-bottom: 4px; }
     .finding-value { font-size: 14px; font-weight: 500; color: #000000; }
     .finding-reason { font-size: 11px; color: #888888; margin-top: 4px; line-height: 1.4; }
-
-    /* result box */
     .result-box {
         background-color: #000000;
         color: #ffffff;
@@ -86,16 +68,12 @@ st.markdown("""
     .risk-high { color: #ff6b6b; font-weight: bold; font-size: 1.1em; }
     .risk-low  { color: #69db7c; font-weight: bold; font-size: 1.1em; }
     .risk-mid  { color: #ffd43b; font-weight: bold; font-size: 1.1em; }
-
-    /* cta box */
     .cta-box {
         background: #000000;
         color: #ffffff;
         padding: 12px 16px;
         font-size: 13px;
     }
-
-    /* section label */
     .section-label {
         font-size: 11px;
         color: #666666;
@@ -104,20 +82,15 @@ st.markdown("""
         margin-bottom: 10px;
         font-weight: 500;
     }
-
-    /* divider in result box */
-    .result-divider {
-        border-top: 1px solid #333333;
-        margin: 8px 0;
-    }
-
-    /* footer */
+    .result-divider { border-top: 1px solid #333333; margin: 8px 0; }
     .footer-text {
         font-size: 10px;
         color: #aaaaaa;
         text-align: center;
         margin-top: 2rem;
     }
+    .page-title { color: #000000 !important; font-size: 26px; font-weight: 500; margin-bottom: 4px; }
+    .page-sub { color: #666666; font-size: 14px; margin-bottom: 1.5rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -132,22 +105,17 @@ def load_data():
 
 try:
     model = load_model()
-    data = load_data()
+    data  = load_data()
 except Exception as e:
     st.error(f"Could not load model or data: {e}")
     st.stop()
 
-# features used to train the XGBoost model
+# features
 features = [
-    'arr_flights',
-    'nas_delay',
-    'security_delay',
+    'arr_flights', 'nas_delay', 'security_delay',
     'delay_minutes_per_flight_capped_p999',
     'avg_delay_minutes_given_delayed_capped_p999',
-    'month',
-    'delay_rate',
-    'weather_pct',
-    'carrier_pct'
+    'month', 'delay_rate', 'weather_pct', 'carrier_pct'
 ]
 
 # month mapping
@@ -156,11 +124,6 @@ month_map = {
     5: 'May', 6: 'June', 7: 'July', 8: 'August',
     9: 'September', 10: 'October', 11: 'November', 12: 'December'
 }
-
-# dropdown options
-airline_list = sorted(data['carrier_name'].dropna().unique().tolist())
-airport_list = sorted(data['airport'].dropna().unique().tolist())
-month_list   = list(month_map.values())
 
 def get_month_number(month_name):
     for num, name in month_map.items():
@@ -175,6 +138,27 @@ def show_risk(prob):
     else:
         return f'<span class="risk-low">{prob:.0%} — LOW RISK ✅</span>'
 
+# build airport lookup — code to full name — from actual data
+airport_lookup = (
+    data[['airport', 'airport_name']]
+    .dropna()
+    .drop_duplicates()
+    .set_index('airport')['airport_name']
+    .to_dict()
+)
+
+# dropdown options
+airline_list      = sorted(data['carrier_name'].dropna().unique().tolist())
+airport_codes     = sorted(data['airport'].dropna().unique().tolist())
+airport_full_list = sorted([airport_lookup.get(c, c) for c in airport_codes])
+month_list        = list(month_map.values())
+
+# reverse lookup — full name to code
+name_to_code = {v: k for k, v in airport_lookup.items()}
+
+def get_code(full_name):
+    return name_to_code.get(full_name, full_name)
+
 # ── SIDEBAR ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ✈️ AeroRight")
@@ -185,11 +169,9 @@ with st.sidebar:
 
 # ── HOME PAGE ──────────────────────────────────────────────────────────────────
 if page == "Home":
+    st.markdown('<div class="page-title">Before you book your next flight</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Here is what 10 years of U.S. airline data tells you</div>', unsafe_allow_html=True)
 
-    st.markdown("## Before you book your next flight")
-    st.markdown("<div style='color:#666; margin-bottom:1.5rem;'>Here is what 10 years of U.S. airline data tells you</div>", unsafe_allow_html=True)
-
-    # stat cards
     c1, c2, c3, c4 = st.columns(4)
     c1.markdown('<div class="stat-card"><div class="stat-label">Records analysed</div><div class="stat-value">224K</div></div>', unsafe_allow_html=True)
     c2.markdown('<div class="stat-card"><div class="stat-label">Airlines covered</div><div class="stat-value">21</div></div>', unsafe_allow_html=True)
@@ -199,15 +181,13 @@ if page == "Home":
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="section-label">Key findings from 10 years of data</div>', unsafe_allow_html=True)
 
-    # finding cards row 1
     f1, f2, f3 = st.columns(3)
     f1.markdown('<div class="finding-card"><div class="finding-title">Best airline (2015–2025)</div><div class="finding-value">Delta Air Lines — 0.1%</div><div class="finding-reason">Lowest cancellation rate across 10 years of data</div></div>', unsafe_allow_html=True)
     f2.markdown('<div class="finding-card"><div class="finding-title">Worst airline (2015–2025)</div><div class="finding-value">Peninsula Airways — 15.6%</div><div class="finding-reason">1 in 6 flights gets cancelled — avoid if possible</div></div>', unsafe_allow_html=True)
-    f3.markdown('<div class="finding-card"><div class="finding-title">Best managed airport</div><div class="finding-value">ATL — lowest cancellation</div><div class="finding-reason">Atlanta handles the most flights yet stays lowest risk</div></div>', unsafe_allow_html=True)
+    f3.markdown('<div class="finding-card"><div class="finding-title">Best managed airport</div><div class="finding-value">Atlanta (ATL) — lowest cancellation</div><div class="finding-reason">Handles the most flights yet stays lowest risk</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # finding cards row 2
     f4, f5, f6 = st.columns(3)
     f4.markdown('<div class="finding-card"><div class="finding-title">Most dangerous month to fly</div><div class="finding-value">April — 3.5% cancellation</div><div class="finding-reason">Spring storms cause the highest disruptions of the year</div></div>', unsafe_allow_html=True)
     f5.markdown('<div class="finding-card"><div class="finding-title">Safest month to fly</div><div class="finding-value">November — lowest risk</div><div class="finding-reason">Best time to book — consistently lowest cancellation rate</div></div>', unsafe_allow_html=True)
@@ -218,15 +198,15 @@ if page == "Home":
 
 # ── CUSTOMER TOOL ──────────────────────────────────────────────────────────────
 elif page == "Customer Tool":
-
-    st.markdown("## 🧳 Customer Tool")
-    st.markdown("<div style='color:#666; margin-bottom:1.5rem;'>Check your flight's cancellation risk before you book</div>", unsafe_allow_html=True)
+    st.markdown('<div class="page-title">🧳 Customer Tool</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Check your flight\'s cancellation risk before you book</div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
         selected_airline = st.selectbox("Airline", airline_list)
     with col2:
-        selected_airport = st.selectbox("Airport", airport_list)
+        selected_airport_name = st.selectbox("Airport", airport_full_list)
+        selected_airport = get_code(selected_airport_name)
     with col3:
         selected_month = st.selectbox("Month", month_list)
 
@@ -242,22 +222,17 @@ elif page == "Customer Tool":
         if filtered.empty:
             st.warning("No data found for this combination. Try a different airline or airport.")
         else:
-            cancel_risk = model.predict_proba(filtered[features])[:, 1].mean()
-
-            all_airlines = data[
-                (data['airport'] == selected_airport) &
-                (data['month'] == month_num)
-            ].dropna(subset=features).copy()
-
+            cancel_risk  = model.predict_proba(filtered[features])[:, 1].mean()
+            all_airlines = data[(data['airport'] == selected_airport) & (data['month'] == month_num)].dropna(subset=features).copy()
             all_airlines['risk'] = model.predict_proba(all_airlines[features])[:, 1]
-            avg_risk        = all_airlines['risk'].mean()
-            safest_airline  = all_airlines.groupby('carrier_name')['risk'].mean().idxmin()
-            safest_risk     = all_airlines.groupby('carrier_name')['risk'].mean().min()
+            avg_risk       = all_airlines['risk'].mean()
+            safest_airline = all_airlines.groupby('carrier_name')['risk'].mean().idxmin()
+            safest_risk    = all_airlines.groupby('carrier_name')['risk'].mean().min()
 
             st.markdown(f"""
             <div class="result-box">
                 <b>Airline:</b> {selected_airline}<br>
-                <b>Airport:</b> {selected_airport} &nbsp;|&nbsp; <b>Month:</b> {selected_month}
+                <b>Airport:</b> {selected_airport_name} &nbsp;|&nbsp; <b>Month:</b> {selected_month}
                 <div class="result-divider"></div>
                 <b>Your Cancellation Risk:</b> {show_risk(cancel_risk)}<br>
                 <b>Airport Average Risk:</b> {avg_risk:.0%}
@@ -268,9 +243,8 @@ elif page == "Customer Tool":
 
 # ── AIRLINE TOOL ───────────────────────────────────────────────────────────────
 elif page == "Airline Tool":
-
-    st.markdown("## 🏢 Airline Tool")
-    st.markdown("<div style='color:#666; margin-bottom:1.5rem;'>Identify your airline's biggest delay driver before the month begins</div>", unsafe_allow_html=True)
+    st.markdown('<div class="page-title">🏢 Airline Tool</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Identify your airline\'s biggest delay driver before the month begins</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -280,18 +254,13 @@ elif page == "Airline Tool":
 
     if st.button("Analyse Delays"):
         month_num2 = get_month_number(selected_month2)
-
-        filtered2 = data[
-            (data['carrier_name'] == selected_airline2) &
-            (data['month'] == month_num2)
-        ]
+        filtered2  = data[(data['carrier_name'] == selected_airline2) & (data['month'] == month_num2)]
 
         if filtered2.empty:
             st.warning("No data found for this airline and month.")
         else:
             delay_columns = ['carrier_delay', 'weather_delay', 'nas_delay', 'late_aircraft_delay']
             delay_labels  = ['Carrier Operations', 'Weather', 'NAS / Air Traffic Control', 'Late Arriving Aircraft']
-
             delay_totals  = filtered2[delay_columns].sum()
             grand_total   = delay_totals.sum()
             biggest_cause = delay_labels[delay_totals.values.argmax()]
@@ -300,7 +269,7 @@ elif page == "Airline Tool":
             for label, col in zip(delay_labels, delay_columns):
                 pct = delay_totals[col] / grand_total * 100
                 bar = "█" * int(pct / 5)
-                table_rows += f"<tr><td style='padding:4px 8px 4px 0;'>{label}</td><td style='padding:4px 8px;'>{delay_totals[col]:,.0f} mins</td><td style='padding:4px 0;'><b>{pct:.0f}%</b> <span style='color:#555;'>{bar}</span></td></tr>"
+                table_rows += f"<tr><td style='padding:6px 8px 6px 0;'>{label}</td><td style='padding:6px 8px;'>{delay_totals[col]:,.0f} mins</td><td style='padding:6px 0;'><b>{pct:.0f}%</b> <span style='color:#555;'>{bar}</span></td></tr>"
 
             st.markdown(f"""
             <div class="result-box">
@@ -321,42 +290,37 @@ elif page == "Airline Tool":
 
 # ── RECOMMENDATION SYSTEM ──────────────────────────────────────────────────────
 elif page == "Recommendation System":
-
-    st.markdown("## 🏆 Recommendation System")
-    st.markdown("<div style='color:#666; margin-bottom:1.5rem;'>Find the safest airline at any airport for your travel month</div>", unsafe_allow_html=True)
+    st.markdown('<div class="page-title">🏆 Recommendation System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Find the safest airline at any airport for your travel month</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        selected_airport3 = st.selectbox("Airport", airport_list)
+        selected_airport_name3 = st.selectbox("Airport", airport_full_list)
+        selected_airport3 = get_code(selected_airport_name3)
     with col2:
         selected_month3 = st.selectbox("Month", month_list)
 
     if st.button("Find Safest Airlines"):
         month_num3 = get_month_number(selected_month3)
-
-        filtered3 = data[
-            (data['airport'] == selected_airport3) &
-            (data['month'] == month_num3)
-        ].dropna(subset=features).copy()
+        filtered3  = data[(data['airport'] == selected_airport3) & (data['month'] == month_num3)].dropna(subset=features).copy()
 
         if filtered3.empty:
             st.warning("No data found for this airport and month.")
         else:
             filtered3['risk'] = model.predict_proba(filtered3[features])[:, 1]
-            ranked = filtered3.groupby('carrier_name')['risk'].mean().sort_values()
-
-            top3         = ranked.head(3)
+            ranked        = filtered3.groupby('carrier_name')['risk'].mean().sort_values()
+            top3          = ranked.head(3)
             worst_airline = ranked.index[-1]
-            worst_risk   = ranked.iloc[-1]
+            worst_risk    = ranked.iloc[-1]
 
-            medals = ["🥇", "🥈", "🥉"]
+            medals    = ["🥇", "🥈", "🥉"]
             top3_rows = ""
             for i, (airline_name, risk_val) in enumerate(top3.items()):
                 top3_rows += f"<tr><td style='padding:6px 0;'>{medals[i]} {airline_name}</td><td style='padding:6px 0; text-align:right;'><span class='risk-low'>{risk_val:.0%}</span></td></tr>"
 
             st.markdown(f"""
             <div class="result-box">
-                <b>Airport:</b> {selected_airport3} &nbsp;|&nbsp; <b>Month:</b> {selected_month3}
+                <b>Airport:</b> {selected_airport_name3} &nbsp;|&nbsp; <b>Month:</b> {selected_month3}
                 <div class="result-divider"></div>
                 <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Top 3 safest airlines</div>
                 <table width="100%" style="color:#fff; border-collapse:collapse;">
