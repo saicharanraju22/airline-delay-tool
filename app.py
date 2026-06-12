@@ -192,8 +192,8 @@ def get_code(full_name):
     return name_to_code.get(full_name, full_name)
 
 # ── SESSION STATE FOR NAVIGATION ───────────────────────────────────────────────
-if 'page' not in st.session_state:
-    st.session_state.page = 'Home'
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
 # ── SIDEBAR ────────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -203,7 +203,7 @@ with st.sidebar:
     st.markdown("<div style='font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:4px;'>Menu</div>", unsafe_allow_html=True)
 
     if st.button("🏠  Home"):
-        st.session_state.page = 'Home'
+        st.session_state.page = "Home"
     if st.button("🧳  Customer Tool"):
         st.session_state.page = 'Customer Tool'
     if st.button("🏢  Airline Tool"):
