@@ -203,10 +203,11 @@ elif page == "Customer Tool":
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        selected_airline = st.selectbox("Airline", airline_list)
-    with col2:
         selected_airport_name = st.selectbox("Airport", airport_full_list)
         selected_airport = get_code(selected_airport_name)
+    with col2:
+        airlines_at_airport = sorted(data[data["airport"] == selected_airport]["carrier_name"].dropna().unique().tolist())
+        selected_airline = st.selectbox("Airline", airlines_at_airport)
     with col3:
         selected_month = st.selectbox("Month", month_list)
 
