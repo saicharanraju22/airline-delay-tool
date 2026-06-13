@@ -60,15 +60,21 @@ st.markdown("""
         border-radius: 0px !important;
         background-color: #ffffff !important;
         color: #000000 !important;
-        border: none !important;
-        font-weight: 600;
+        border: 2px solid #ffffff !important;
+        font-weight: 700 !important;
         width: 100%;
         padding: 10px;
         font-size: 14px;
+        -webkit-text-fill-color: #000000 !important;
     }
     .stButton > button:hover {
         background-color: #dddddd !important;
         color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+    }
+    .stButton > button p {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
     }
 
     /* stat cards */
