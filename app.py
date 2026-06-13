@@ -15,75 +15,85 @@ st.markdown("""
     header {visibility: hidden;}
     [data-testid="stSidebar"] {display: none;}
 
-    .stApp { background-color: #f0f4f8; }
-    h1, h2, h3 { color: #000000 !important; }
-    p { color: #000000 !important; }
-    [data-testid="stMarkdownContainer"] p { color: #000000 !important; }
-    [data-testid="stMarkdownContainer"] h3 { color: #000000 !important; }
+    /* dark navy background everywhere */
+    .stApp { background-color: #0d1117; }
+    [data-testid="stAppViewContainer"] { background-color: #0d1117; }
+    [data-testid="stVerticalBlock"] { background-color: #0d1117; }
+
+    /* all text white */
+    h1, h2, h3, h4, p, label, div { color: #ffffff !important; }
+    [data-testid="stMarkdownContainer"] * { color: #ffffff !important; }
 
     /* tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 4px;
-        background-color: #000000;
+        background-color: #161b22;
         padding: 8px 8px 0px 8px;
         border-radius: 0px;
+        border-bottom: 2px solid #30363d;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: #000000;
-        color: #888888;
+        background-color: #161b22;
+        color: #888888 !important;
         border-radius: 0px;
         padding: 8px 20px;
         font-size: 14px;
         border: none;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #f0f4f8 !important;
-        color: #000000 !important;
+        background-color: #0d1117 !important;
+        color: #ffffff !important;
         font-weight: 600;
+        border-top: 2px solid #ffffff !important;
     }
 
     /* inputs */
     .stSelectbox > div > div {
         border-radius: 0px !important;
-        border: 1.5px solid #000000 !important;
-        background-color: #ffffff !important;
-        color: #000000 !important;
+        border: 1.5px solid #30363d !important;
+        background-color: #161b22 !important;
+        color: #ffffff !important;
     }
 
     /* buttons */
     .stButton > button {
         border-radius: 0px !important;
-        background-color: #000000 !important;
-        color: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
         border: none !important;
-        font-weight: 500;
+        font-weight: 600;
         width: 100%;
         padding: 10px;
         font-size: 14px;
     }
-    .stButton > button:hover { background-color: #333333 !important; }
+    .stButton > button:hover {
+        background-color: #dddddd !important;
+        color: #000000 !important;
+    }
 
-    /* cards */
-    .stat-card { border: 1.5px solid #000; padding: 12px 16px; background: #ffffff; }
-    .stat-label { font-size: 11px; color: #666; margin-bottom: 4px; }
-    .stat-value { font-size: 22px; font-weight: 500; color: #000; }
-    .finding-card { border: 1.5px solid #000; padding: 12px 16px; background: #ffffff; }
-    .finding-title { font-size: 11px; color: #666; margin-bottom: 4px; }
-    .finding-value { font-size: 14px; font-weight: 500; color: #000; }
-    .finding-reason { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; }
+    /* stat cards */
+    .stat-card { border: 1.5px solid #30363d; padding: 12px 16px; background: #161b22; }
+    .stat-label { font-size: 11px; color: #888888 !important; margin-bottom: 4px; }
+    .stat-value { font-size: 22px; font-weight: 500; color: #ffffff !important; }
+
+    /* finding cards */
+    .finding-card { border: 1.5px solid #30363d; padding: 12px 16px; background: #161b22; }
+    .finding-title { font-size: 11px; color: #888888 !important; margin-bottom: 4px; }
+    .finding-value { font-size: 14px; font-weight: 500; color: #ffffff !important; }
+    .finding-reason { font-size: 11px; color: #888888 !important; margin-top: 4px; line-height: 1.4; }
 
     /* result box */
-    .result-box { background-color: #000; color: #fff; padding: 20px; border: 1.5px solid #000; margin-top: 15px; font-size: 14px; line-height: 1.9; }
+    .result-box { background-color: #161b22; color: #fff; padding: 20px; border: 1.5px solid #30363d; margin-top: 15px; font-size: 14px; line-height: 1.9; }
     .risk-high { color: #ff6b6b; font-weight: bold; }
     .risk-low  { color: #69db7c; font-weight: bold; }
     .risk-mid  { color: #ffd43b; font-weight: bold; }
-    .result-divider { border-top: 1px solid #333; margin: 8px 0; }
+    .result-divider { border-top: 1px solid #30363d; margin: 8px 0; }
 
-    .cta-box { background: #000; color: #fff; padding: 12px 16px; font-size: 13px; }
-    .section-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; font-weight: 500; }
-    .page-sub { color: #666; font-size: 14px; margin-bottom: 1.5rem; }
-    .historical-note { font-size: 11px; color: #888; margin-top: 8px; font-style: italic; margin-bottom: 12px; }
-    .footer-text { font-size: 10px; color: #aaa; text-align: center; margin-top: 2rem; }
+    .cta-box { background: #161b22; color: #fff; padding: 12px 16px; font-size: 13px; border: 1.5px solid #30363d; }
+    .section-label { font-size: 11px; color: #888888 !important; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; font-weight: 500; }
+    .page-sub { color: #888888 !important; font-size: 14px; margin-bottom: 1.5rem; }
+    .historical-note { font-size: 11px; color: #888888 !important; margin-top: 8px; font-style: italic; margin-bottom: 12px; }
+    .footer-text { font-size: 10px; color: #555 !important; text-align: center; margin-top: 2rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -140,10 +150,10 @@ def get_code(name):
 
 # header
 st.markdown("# ✈️ AeroRight")
-st.markdown("<div style='color:#666; margin-bottom:1rem;'>Right choice for your travel</div>", unsafe_allow_html=True)
+st.markdown("<div class='page-sub'>Right choice for your travel</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# tabs - always visible, always works
+# tabs
 tab1, tab2, tab3, tab4 = st.tabs([
     "🏠 Home",
     "🧳 Customer Tool",
@@ -262,7 +272,7 @@ with tab3:
                 <b>Airline:</b> {sel_airline2} &nbsp;|&nbsp; <b>Month:</b> {sel_month2}
                 <div class="result-divider"></div>
                 <table width="100%" style="color:#fff;border-collapse:collapse;">
-                    <tr style="border-bottom:1px solid #333;color:#aaa;">
+                    <tr style="border-bottom:1px solid #30363d;color:#aaa;">
                         <th align="left" style="padding:4px 8px 6px 0;font-weight:400;font-size:12px;">Delay Cause</th>
                         <th align="left" style="padding:4px 8px 6px;font-weight:400;font-size:12px;">Minutes</th>
                         <th align="left" style="padding:4px 0 6px;font-weight:400;font-size:12px;">Share</th>
