@@ -16,6 +16,10 @@ st.markdown("""
     [data-testid="stSidebar"] {display: none;}
 
     .stApp { background-color: #f0f4f8; }
+    h1, h2, h3 { color: #000000 !important; }
+    p { color: #000000 !important; }
+    [data-testid="stMarkdownContainer"] p { color: #000000 !important; }
+    [data-testid="stMarkdownContainer"] h3 { color: #000000 !important; }
 
     /* tabs */
     .stTabs [data-baseweb="tab-list"] {
